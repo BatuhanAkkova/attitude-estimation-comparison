@@ -1,7 +1,7 @@
 # Spacecraft Attitude Estimation Framework
 
 ## 1. Problem Statement
-Accurate attitude estimation is critical for CubeSats and LEO satellites, particularly in Very Low Earth Orbit (VLEO) where aerodynamic disturbances are significant. This project simulates a high-fidelity attitude determination system (ADS) using low-cost sensors (Magnetometer, Sun Sensor, Gyroscope) to estimate spacecraft attitude quaternion ($q$) and gyroscope bias ($\beta$). We compare two industry-standard Kalman Filter formulations:
+Accurate attitude estimation is critical for CubeSats and LEO satellites. This project simulates a high-fidelity attitude determination system (ADS) using low-cost sensors (Magnetometer, Sun Sensor, Gyroscope) to estimate spacecraft attitude quaternion ($q$) and gyroscope bias ($\beta$). I compared two industry-standard Kalman Filter formulations:
 - **Multiplicative Extended Kalman Filter (MEKF)**: An error-state formulation that respects the unit quaternion constraint.
 - **Unscented Kalman Filter (UKF/USQUE)**: A sigma-point filter that captures higher-order non-linearities without Jacobian linearization.
 
