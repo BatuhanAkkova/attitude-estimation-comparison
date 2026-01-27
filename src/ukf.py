@@ -185,3 +185,11 @@ class UKF:
         
         # Update P
         self.P = self.P - K @ P_zz @ K.T
+        
+        # NIS Calculation
+        try:
+            nis = y.T @ np.linalg.inv(P_zz) @ y
+        except np.linalg.LinAlgError:
+            nis = 0.0
+            
+        return nis

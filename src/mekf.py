@@ -83,3 +83,14 @@ class MEKF:
         I = np.eye(6)
         # Joseph form for stability
         self.P = (I - K @ H) @ self.P @ (I - K @ H).T + K @ self.R @ K.T
+        
+        # NIS Calculation
+        # nis = y.T * S^-1 * y
+        # We need S_inv. We computed inv(S) earlier? No, we computed np.linalg.inv(S) inline.
+        # Let's recompute or handle efficiency later. For now, recompute.
+        try:
+            nis = y.T @ np.linalg.inv(S) @ y
+        except np.linalg.LinAlgError:
+            nis = 0.0
+            
+        return nis

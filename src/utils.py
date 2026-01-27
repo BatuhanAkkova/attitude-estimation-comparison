@@ -65,3 +65,57 @@ def skew(v):
         [v[2], 0, -v[0]],
         [-v[1], v[0], 0]
     ])
+
+def eci_to_lvlh(r_eci, v_eci):
+    """
+    Computes Rotation Matrix from ECI to LVLH frame.
+    LVLH Definition (Earth Pointing):
+    - Z: Points towards Earth Center (Nadir) = -r_norm
+    - Y: Opposite to Orbit Normal = - (r x v)_norm
+    - X: Completes triad (Roughly Velocity) = Y x Z
+    
+    Args:
+        r_eci (np.array): Position vector [km]
+        v_eci (np.array): Velocity vector [km/s]
+        
+    Returns:
+        np.array: 3x3 Rotation Matrix (ECI -> LVLH)
+    """
+    r_norm = r_eci / np.linalg.norm(r_eci)
+    h = np.cross(r_eci, v_eci)
+    h_norm = h / np.linalg.norm(h)
+    
+    z_lvlh = -r_norm
+    y_lvlh = -h_norm
+    x_lvlh = np.cross(y_lvlh, z_lvlh)
+    
+    R_lvlh2eci = np.column_stack([x_lvlh, y_lvlh, z_lvlh])
+    return R_lvlh2eci.T
+
+def q_from_vectors(u, v):
+    """
+    Computes quaternion that rotates vector u to vector v.
+    q * u * q_inv = v
+    """
+    u = u / np.linalg.norm(u)
+    v = v / np.linalg.norm(v)
+    
+    dot = np.dot(u, v)
+    
+    if dot > 0.999999:
+        return np.array([0., 0., 0., 1.])
+    elif dot < -0.999999:
+        # 180 degree rotation around any orthogonal axis
+        # Find orthogonal vector
+        w = np.cross(u, np.array([1., 0., 0.]))
+        if np.linalg.norm(w) < 0.01:
+            w = np.cross(u, np.array([0., 1., 0.]))
+        w = w / np.linalg.norm(w)
+        return np.array([w[0], w[1], w[2], 0.])
+    
+    axis = np.cross(u, v)
+    q_xyz = axis
+    q_w = 1.0 + dot
+    
+    q = np.concatenate([q_xyz, [q_w]])
+    return q_norm(q)
