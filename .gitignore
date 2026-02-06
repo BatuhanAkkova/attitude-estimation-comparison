@@ -1,8 +1,4 @@
-requirements.txt
-performance.txt
-
 __pycache__/
 *.py[codz]
 *$py.class
-
 figures/

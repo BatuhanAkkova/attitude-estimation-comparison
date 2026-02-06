@@ -14,7 +14,7 @@ class UKF:
         self.Q = Q
         self.R = R
         self.n = 6 # Error state dimension
-        self.alpha = 1e-3
+        self.alpha = 0.1
         self.kappa = 0.0
         self.beta = 2.0
         self.lam = self.alpha**2 * (self.n + self.kappa) - self.n
@@ -58,13 +58,13 @@ class UKF:
         nom_beta = self.state[4:]
         
         for i in range(2*self.n + 1):
-            # Error components
-            d_mrp = sigma_errors[i, :3]
+            # Error components (rotation vector delta_theta and bias)
+            d_theta = sigma_errors[i, :3]
             d_beta = sigma_errors[i, 3:]
             
             # Reconstruct state
-            # q = nom_q * q(mrp)
-            dq = mrp_to_quat(d_mrp)
+            # Convert rotation vector to MRP for quaternion conversion
+            dq = mrp_to_quat(d_theta / 4.0)
 
             q_i = q_mult(nom_q, dq)
             beta_i = nom_beta + d_beta
@@ -92,13 +92,11 @@ class UKF:
                 q_i = propagated_states[i, :4]
                 # Error q_err = q_mean_inv * q_i
                 q_err = q_mult(q_inv(mean_q), q_i)
-                # Convert to MRP
+                # Convert to MRP for gradient calculation
                 e_i = quat_to_mrp(q_err)
                 e_sum += self.Wm[i] * e_i
             
             # Update mean_q
-            # q_update = q(e_sum)
-            # mean_q = mean_q * q_update
             if np.linalg.norm(e_sum) < 1e-6:
                 break
             q_upd = mrp_to_quat(e_sum)
@@ -116,11 +114,11 @@ class UKF:
             
             # d_beta
             d_beta = beta_i - mean_beta
-            # d_mrp
+            # d_theta (Rotation Vector approx 4 * MRP)
             q_err = q_mult(q_inv(mean_q), q_i)
-            d_mrp = quat_to_mrp(q_err)
+            d_theta = 4.0 * quat_to_mrp(q_err)
             
-            delta_x = np.concatenate([d_mrp, d_beta])
+            delta_x = np.concatenate([d_theta, d_beta])
             P_pred += self.Wc[i] * np.outer(delta_x, delta_x)
             
         self.P = P_pred + self.Q
@@ -136,10 +134,10 @@ class UKF:
         meas_dim = 3
         
         for i in range(2*self.n + 1):
-            d_mrp = sigma_errors[i, :3]
+            d_theta = sigma_errors[i, :3]
             # No bias error needed for measurement if measurement only depends on q
             
-            dq = mrp_to_quat(d_mrp)
+            dq = mrp_to_quat(d_theta / 4.0)
             q_i = q_mult(nom_q, dq)
             
             # Predict measurement
@@ -175,10 +173,10 @@ class UKF:
         delta_x = K @ y
         
         # Update State
-        d_mrp = delta_x[:3]
+        d_theta = delta_x[:3]
         d_beta = delta_x[3:]
         
-        dq = mrp_to_quat(d_mrp)
+        dq = mrp_to_quat(d_theta / 4.0)
         self.state[:4] = q_mult(self.state[:4], dq)
         self.state[:4] = q_norm(self.state[:4])
         self.state[4:] += d_beta

@@ -1,9 +1,12 @@
 # Spacecraft Attitude Estimation Framework
 
 ## 1. Problem Statement
-Accurate attitude estimation is critical for CubeSats and LEO satellites. This project simulates a high-fidelity attitude determination system (ADS) using low-cost sensors (Magnetometer, Sun Sensor, Gyroscope) to estimate spacecraft attitude quaternion ($q$) and gyroscope bias ($\beta$). I compared two industry-standard Kalman Filter formulations:
+Accurate attitude estimation is critical for CubeSats and LEO satellites. This project simulates a high-fidelity attitude determination system (ADS) using low-cost sensors (Magnetometer, Sun Sensor, Gyroscope) to estimate spacecraft attitude quaternion ($q$) and gyroscope bias ($\beta$).
+
+I compared three industry-standard Kalman Filter formulations:
 - **Multiplicative Extended Kalman Filter (MEKF)**: An error-state formulation that respects the unit quaternion constraint.
 - **Unscented Kalman Filter (UKF/USQUE)**: A sigma-point filter that captures higher-order non-linearities without Jacobian linearization.
+- **Adaptive Extended Kalman Filter (AEKF)**: An EKF variant that dynamically adjusts noise covariance to handle uncertain environments.
 
 ## 2. System Model
 
@@ -13,8 +16,8 @@ Accurate attitude estimation is critical for CubeSats and LEO satellites. This p
 - **LVLH**: Local-Vertical Local-Horizontal (Target frame for Earth Pointing).
 
 ### 2.2 Orbit and Dynamics
-- **Orbit Model**: J2 Perturbed Two-Body Propagator (LEO, 500 km, 45 deg inclination). Now includes **Atmospheric Drag** and **Solar Radiation Pressure (SRP)** perturbations.
-- **Attitude Dynamics**: Rigid body dynamics (Euler's equations). The simulation now accounts for:
+- **Orbit Model**: J2 Perturbed Two-Body Propagator (LEO, 500 km, 45 deg inclination). Includes **Atmospheric Drag** and **Solar Radiation Pressure (SRP)** perturbations.
+- **Attitude Dynamics**: Rigid body dynamics (Euler's equations). The simulation accounts for:
     - **Initial Tumbling**: Realistic initial angular rates.
     - **Gravity Gradient Torque**: Standard 1/R^3 model.
     - **Aerodynamic Torque**: Based on center-of-pressure (CoP) offset and variable atmospheric density.
@@ -29,79 +32,134 @@ Accurate attitude estimation is critical for CubeSats and LEO satellites. This p
 
 ## 3. Estimation Methods
 
-### 3.1 MEKF Formulation
-The MEKF estimates the error quaternion $\delta q$ relative to a reference quaternion.
+### 3.1 MEKF (Multiplicative EKF)
+Estimates error quaternion $\delta q$ relative to a reference.
 - **State**: $\delta x = [\delta \theta^T, \delta \beta^T]^T$ (6x1).
 - **Update**: Uses Jacobian $H$ computed from predicted measurements.
-- **Reset**: Reference quaternion updated by $\delta q$ after every measurement.
+- **Constraint**: Maintains unit quaternion by multiplicative updates.
 
-### 3.2 UKF Formulation (USQUE)
-The UKF uses the Unscented Transform to propagate means and covariances.
-- **Sigma Points**: Generated from error state covariance $P$.
-- **Propagation**: Runge-Kutta 4th order integration of sigma points.
-- **Update**: Measurement update performed in sigma-space, avoiding explicit Jacobians.
+### 3.2 UKF (Unscented Kalman Filter - USQUE)
+Uses the Unscented Transform to propagate means and covariances.
+- **Sigma Points**: Generated from error state covariance $P$ (13 points for 6D state).
+- **Advantage**: Better handling of large initial errors and non-linearities.
 
-## 4. Simulation Scenarios
-The simulation integrates:
-- **RK4 Orbit Propagation**: Evolves position $r$ and velocity $v$.
-- **Environment Models**: Magnetic Field ($B_{eci}(r)$) and Sun Vector ($S_{eci}(t)$).
-- **Sensor Simulation**: Generates noisy measurements in Body frame.
+### 3.3 AEKF (Adaptive EKF)
+Monitors measurement residuals to adaptively tune the process or measurement noise covariance ($Q$ or $R$).
+- **Goal**: Improved robustness against sensor anomalies or model mismatches.
 
-We provide a suite of scenarios to stress-test the filters:
-- **[A] Nominal**: Small initial error (10 deg), standard noise. Baseline performance.
-- **[B] Large Initial Error**: 120 deg initial error. Tests convergence from "lost in space" conditions.
-- **[C] High Bias**: 10x Gyro Bias (0.1 rad/s). Tests bias estimation capacity.
-- **[D] Eclipse**: Sun Sensor dropout (t=50s to 150s). Tests observability with only Magnetometer.
+---
 
-To run these:
-```bash
-python simulations/run_scenarios.py
-```
-Dependencies:
-- `numpy`
-- `matplotlib`
-- `scipy` (for statistical analysis)
-- `tqdm` (for parallel simulation progress bars)
+## 4. Performance Analysis & Results
 
-## 5. Results & Analysis
+I conducted extensive Monte Carlo simulations ($N=50$ runs) across four Stress-Test scenarios.
 
-### Computational Performance
-Across all scenarios, the computational cost comparison is striking:
-| Filter | Avg Run Time (s) | Efficiency |
-|--------|------------------|------------|
-| **MEKF** | **~1.7s** | **1.0x (Baseline)** |
-| **UKF**  | **~14.5s** | **~8.5x Slower** |
+### 4.1 Scenario A: Nominal Operations
+**Configuration**: $InitErr = 10.0^\circ$, $BiasScale = 1.0x$, No Eclipse.
 
-The **MEKF** is the clear winner for real-time applications on constrained hardware. The **UKF** costs significantly more because it must integrate 13 sigma points (for a 6D error state) through the RK4 dynamics at every step.
+| Filter | RMSE (deg) | Diverged (%) | Avg Time (s) |
+|--------|------------|--------------|--------------|
+| **MEKF** | 0.4256 | 0.0% | 0.85s |
+| **UKF**  | 0.4256 | 0.0% | 7.13s |
+| **AEKF** | **0.4009** | 0.0% | 0.95s |
 
-### [A] Nominal Scenario
-- **Performance**: Both filters converge rapidly (< 30s).
-- **Accuracy**: Steady-state errors are matched at approx 0.1 deg.
-- **Consistency**: NEES/NIS match theoretical bounds perfectly.
+> [!NOTE]
+> In nominal conditions, all filters converge quickly. AEKF shows a slight edge in accuracy by adaptively tuning to the noise environment.
 
-### [B] Large Initial Error (120 deg)
-- **UKF**: Shows superior robustness and faster convergence from large angles due to its ability to capture non-linearities without linearization (Jacobians).
-- **MEKF**: Converges but exhibits slightly higher transient errors initially.
+![Nominal RMSE](figures/anchor_nominal/rmse_time.png)
+![Nominal NEES](figures/anchor_nominal/nees.png)
 
-### [C] High Bias & Disturbance
-- **Robustness**: Both filters successfully estimate biases even under 10x nominal levels.
-- **Disturbances**: Gravity gradient and drag torques introduce small periodic biases that the filters correctly track via the gyro bias state.
+---
 
-### [D] Sensor Dropout (Eclipse)
-- **Behavior**: During eclipse (t=50-150s), Sun Sensor data is lost.
-- **Covariance**: Covariance correctly inflates, and accuracy degrades gracefully as the system relies solely on the Magnetometer.
-- **Recovery**: Both filters re-converge instantly upon exiting eclipse.
+### 4.2 Scenario B: High Gyro Bias
+**Configuration**: $InitErr = 10.0^\circ$, $BiasScale = 15.0x$, No Eclipse.
 
-## 6. Consistency Analysis
-- **NEES/NIS**: Multi-run Monte Carlo trials (N=50) confirm both filters are well-tuned. NEES remains within the 95% confidence intervals for the 6-DOF state.
-- **Computational Cost**: UKF provides a safety margin for non-linear convergence at a high CPU cost (9x). MEKF is recommended for nominal operations.
+| Filter | RMSE (deg) | Diverged (%) | Avg Time (s) |
+|--------|------------|--------------|--------------|
+| **MEKF** | 0.3426 | 0.0% | 0.84s |
+| **UKF**  | 0.3426 | 0.0% | 7.06s |
+| **AEKF** | **0.3180** | 0.0% | 0.93s |
 
-## 7. References
-- **For UKF (USQUE) implementation**: Crassidis, J. L., & Markley, F. L. (2003). Unscented Filtering for Spacecraft Attitude Estimation. Journal of Guidance, Control, and Dynamics, 26(4).
-- **For MEKF implementation**: Lefferts, E. J., Markley, F. L., & Shuster, M. D. (1982). Kalman Filtering for Spacecraft Attitude Estimation. Journal of Guidance, Control, and Dynamics, 5(5).
-- **For disturbance modelling and frame conversion**: Vallado, D. A. (2013). Fundamentals of Astrodynamics and Applications (4th ed.).
-- **For sensor models**: Markley, F. L., & Crassidis, J. L. (2014). Fundamentals of Spacecraft Attitude Determination and Control. & Wertz, J. R. (Ed.). (1978). Spacecraft Attitude Determination and Control.
+Both MEKF and UKF handle high bias equally well, but AEKF remains the most accurate.
 
-## Author:
+![High Bias RMSE](figures/anchor_high_bias/rmse_time.png)
+
+---
+
+### 4.3 Scenario C: High Tumble (Lost-in-Space)
+**Configuration**: $InitErr = 90.0^\circ$, $BiasScale = 1.0x$, No Eclipse.
+
+| Filter | RMSE (deg) | Diverged (%) | Avg Time (s) |
+|--------|------------|--------------|--------------|
+| **MEKF** | 0.4250 | 50.0% | 0.84s |
+| **UKF**  | **0.4250** | **35.0%** | 7.04s |
+| **AEKF** | 83.3696 | 100.0% | 0.93s |
+
+> [!IMPORTANT]
+> **UKF** is the clear winner for robustness. It has the lowest divergence rate (35%) when starting from large $90^\circ$ errors. The **AEKF** struggled significantly in this highly non-linear initialization phase.
+
+![High Tumble RMSE](figures/anchor_high_tumble/rmse_time.png)
+
+---
+
+### 4.4 Scenario D: Eclipse (Sensor Dropout)
+**Configuration**: $InitErr = 10.0^\circ$, $BiasScale = 1.0x$, **Eclipse Enabled**.
+
+| Filter | RMSE (deg) | Diverged (%) | Avg Time (s) |
+|--------|------------|--------------|--------------|
+| **MEKF** | 0.4806 | 0.0% | 0.74s |
+| **UKF**  | 0.4806 | 0.0% | 6.63s |
+| **AEKF** | **0.4388** | 0.0% | 0.83s |
+
+Filters rely solely on the Magnetometer during eclipse. Accuracy degrades but remains stable.
+
+![Eclipse RMSE](figures/scen_eclipse/rmse_time.png)
+
+---
+
+## 5. Sensitivity Analysis
+
+I analyzed filter sensitivity to initial errors and gyro bias levels to find the operational envelopes.
+
+````carousel
+![Init Error Sensitivity](figures/sensitivity/init_error_deg_sensitivity.png)
+<!-- slide -->
+![Bias Scale Sensitivity](figures/sensitivity/bias_scale_sensitivity.png)
+````
+
+- **Initialization Limit**: Success rate drops significantly for initial errors > 60 degrees for EKF-based filters.
+- **Bias Tolerance**: All filters are remarkably robust to gyro bias scaling up to 15x nominal, provided initialization is successful.
+
+---
+
+## 6. Summary Comparison
+
+| Metric | MEKF | UKF | AEKF |
+|--------|------|-----|------|
+| **Accuracy** | Good | Good | **Best** |
+| **Robustness** | Moderate | **High** | Low |
+| **CPU Efficiency** | **High** | Low | **High** |
+| **Recommended Use** | Nominal Ops | Recovery/Lost-in-Space | Precision Ops |
+
+---
+
+## 7. How to Run
+
+1. **Install Dependencies**:
+   ```bash
+   pip install numpy matplotlib scipy tqdm
+   ```
+2. **Execute Scenarios**:
+   ```bash
+   python simulations/run_scenarios.py
+   ```
+
+---
+
+## 8. References
+- Crassidis, J. L., & Markley, F. L. (2003). *Unscented Filtering for Spacecraft Attitude Estimation*.
+- Lefferts, E. J., et al. (1982). *Kalman Filtering for Spacecraft Attitude Estimation*.
+- Markley, F. L., & Crassidis, J. L. (2014). *Fundamentals of Spacecraft Attitude Determination and Control*.
+
+## Author
 **Batuhan Akkova**
 [Email](mailto:batuhanakkova1@gmail.com)

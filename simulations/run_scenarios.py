@@ -6,47 +6,52 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from simulations.monte_carlo import run_monte_carlo
+from simulations.sensitivity_analysis import run_sensitivity_analysis
 
 def main():
     print("=== Running Scenario Suite ===")
     
-    # 1. Nominal
-    print("\n[Scenario A] Nominal")
+    # 1. Sensitivity Analysis (Sweeps - find breakpoints)
+    print("\n[Scenario 1] Sensitivity Analysis")
+    run_sensitivity_analysis()
+    
+    # 2. Anchor Point: Nominal (Consistency Check)
+    print("\n[Scenario 2] Anchor: Nominal Performance")
     run_monte_carlo({
-        'num_runs': 50, 
+        'num_runs': 20,
         'init_error_deg': 10.0,
         'bias_scale': 1.0,
         'eclipse_sim': False
-    }, save_prefix="scen_A_nominal")
-    
-    # 2. Large Initial Error
-    print("\n[Scenario B] Large Initial Error (120 deg)")
+    }, save_prefix="anchor_nominal")
+
+    # 3. Anchor Point: High Tumble (Non-linearity Check)
+    print("\n[Scenario 3] Anchor: High Tumble (Large Init Error)")
     run_monte_carlo({
-        'num_runs': 50,
-        'init_error_deg': 120.0,
+        'num_runs': 20,
+        'init_error_deg': 90.0,
         'bias_scale': 1.0,
         'eclipse_sim': False
-    }, save_prefix="scen_B_large_err")
-    
-    # 3. High Bias
-    print("\n[Scenario C] High Bias (10x)")
+    }, save_prefix="anchor_high_tumble")
+
+    # 4. Anchor Point: Stress Test (High Bias)
+    print("\n[Scenario 4] Anchor: Stress Test (Degraded Gyros)")
     run_monte_carlo({
-        'num_runs': 50, 
+        'num_runs': 20,
         'init_error_deg': 10.0,
-        'bias_scale': 10.0,
+        'bias_scale': 15.0,
         'eclipse_sim': False
-    }, save_prefix="scen_C_high_bias")
+    }, save_prefix="anchor_high_bias")
     
-    # 4. Eclipse
-    print("\n[Scenario D] Sensor Dropout (Eclipse)")
+    # 5. Eclipse (Time-dependent behavior)
+    print("\n[Scenario 5] Sensor Dropout (Eclipse)")
     run_monte_carlo({
-        'num_runs': 50,
+        'num_runs': 20,
         'init_error_deg': 10.0,
         'bias_scale': 1.0,
         'eclipse_sim': True
-    }, save_prefix="scen_D_eclipse")
+    }, save_prefix="scen_eclipse")
     
-    print("\nAll scenarios complete. Check 'figures/' for plots.")
+    print("\nAll scenarios complete.")
 
 if __name__ == '__main__':
     main()

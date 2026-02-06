@@ -54,6 +54,8 @@ def mrp_to_quat(mrp):
 
 def quat_to_mrp(q):
     """Quaternion [x,y,z,w] to MRP"""
+    if q[3] < 0:
+        q = -q
     # simple standard conversion:
     den = 1.0 + q[3]
     return np.array([q[0], q[1], q[2]]) / den
