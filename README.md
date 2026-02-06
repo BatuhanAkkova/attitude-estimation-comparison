@@ -130,10 +130,12 @@ I analyzed filter sensitivity to initial errors and gyro bias levels to find the
 
 | Metric | MEKF | UKF | AEKF |
 |--------|------|-----|------|
-| **Accuracy** | Good | Good | **Best** |
+| **Accuracy** | Good | **High** | Variable |
 | **Robustness** | Moderate | **High** | Low |
 | **CPU Efficiency** | **High** | Low | **High** |
-| **Recommended Use** | Nominal Ops | Recovery/Lost-in-Space | Precision Ops |
+| **Recommended Use** | Nominal Ops | Recovery / Lost-in-Space | Low-Tumble / Calibrated Ops |
+
+**Key Insight**: Although AEKF can provide superior accuracy in specific nominal conditions, it is **not the best choice for general accuracy** across all flight regimes. It is highly sensitive to initialization and should be used exclusively with **low tumble rates** or after being **carefully calibrated** to the specific noise environment to avoid divergence. For robust recovery from large initial errors, **UKF** is superior in this simulation.
 
 ---
 
