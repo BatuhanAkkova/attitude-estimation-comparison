@@ -62,8 +62,7 @@ I conducted extensive Monte Carlo simulations ($N=50$ runs) across four Stress-T
 | **UKF**  | 0.4256 | 0.0% | 7.13s |
 | **AEKF** | **0.4009** | 0.0% | 0.95s |
 
-> [!NOTE]
-> In nominal conditions, all filters converge quickly. AEKF shows a slight edge in accuracy by adaptively tuning to the noise environment.
+In nominal conditions, all filters converge quickly. AEKF shows a slight edge in accuracy by adaptively tuning to the noise environment.
 
 ![Nominal RMSE](figures/anchor_nominal/rmse_time.png)
 ![Nominal NEES](figures/anchor_nominal/nees.png)
@@ -94,8 +93,7 @@ Both MEKF and UKF handle high bias equally well, but AEKF remains the most accur
 | **UKF**  | **0.4250** | **35.0%** | 7.04s |
 | **AEKF** | 83.3696 | 100.0% | 0.93s |
 
-> [!IMPORTANT]
-> **UKF** is the clear winner for robustness. It has the lowest divergence rate (35%) when starting from large $90^\circ$ errors. The **AEKF** struggled significantly in this highly non-linear initialization phase.
+**UKF** is the clear winner for robustness. It has the lowest divergence rate (35%) when starting from large $90^\circ$ errors. The **AEKF** struggled significantly in this highly non-linear initialization phase.
 
 ![High Tumble RMSE](figures/anchor_high_tumble/rmse_time.png)
 
@@ -120,11 +118,8 @@ Filters rely solely on the Magnetometer during eclipse. Accuracy degrades but re
 
 I analyzed filter sensitivity to initial errors and gyro bias levels to find the operational envelopes.
 
-````carousel
 ![Init Error Sensitivity](figures/sensitivity/init_error_deg_sensitivity.png)
-<!-- slide -->
 ![Bias Scale Sensitivity](figures/sensitivity/bias_scale_sensitivity.png)
-````
 
 - **Initialization Limit**: Success rate drops significantly for initial errors > 60 degrees for EKF-based filters.
 - **Bias Tolerance**: All filters are remarkably robust to gyro bias scaling up to 15x nominal, provided initialization is successful.
