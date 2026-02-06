@@ -1,0 +1,6 @@
+Monte Carlo Results: anchor_nominal
+Config: InitErr=10.0 deg, BiasScale=1.0x, Eclipse=False
+========================================
+MEKF      : RMSE=0.4256 deg | Diverged=0.0% | Time=0.8536s
+UKF       : RMSE=0.4256 deg | Diverged=0.0% | Time=7.1324s
+AEKF      : RMSE=0.4009 deg | Diverged=0.0% | Time=0.9503s

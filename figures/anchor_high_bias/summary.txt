@@ -1,0 +1,6 @@
+Monte Carlo Results: anchor_high_bias
+Config: InitErr=10.0 deg, BiasScale=15.0x, Eclipse=False
+========================================
+MEKF      : RMSE=0.3426 deg | Diverged=0.0% | Time=0.8361s
+UKF       : RMSE=0.3426 deg | Diverged=0.0% | Time=7.0603s
+AEKF      : RMSE=0.3180 deg | Diverged=0.0% | Time=0.9311s
