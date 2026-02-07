@@ -1,6 +1,6 @@
 Monte Carlo Results: anchor_high_tumble
 Config: InitErr=90.0 deg, BiasScale=1.0x, Eclipse=False
 ========================================
-MEKF      : RMSE=0.4250 deg | Diverged=50.0% | Time=0.8363s
-UKF       : RMSE=0.4250 deg | Diverged=35.0% | Time=7.0355s
-AEKF      : RMSE=83.3696 deg | Diverged=100.0% | Time=0.9314s
+MEKF      : RMSE=0.4365 deg | Diverged=75.0% | Time=0.8724s
+UKF       : RMSE=0.4365 deg | Diverged=65.0% | Time=7.3279s
+AEKF      : RMSE=59.1978 deg | Diverged=100.0% | Time=0.9776s

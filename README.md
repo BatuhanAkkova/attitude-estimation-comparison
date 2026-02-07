@@ -58,9 +58,9 @@ I conducted extensive Monte Carlo simulations ($N=50$ runs) across four Stress-T
 
 | Filter | RMSE (deg) | Diverged (%) | Avg Time (s) |
 |--------|------------|--------------|--------------|
-| **MEKF** | 0.4256 | 0.0% | 0.85s |
-| **UKF**  | 0.4256 | 0.0% | 7.13s |
-| **AEKF** | **0.4009** | 0.0% | 0.95s |
+| **MEKF** | 0.4601 | 0.0% | 0.86s |
+| **UKF**  | 0.4601 | 0.0% | 7.27s |
+| **AEKF** | **0.4410** | 0.0% | 0.97s |
 
 In nominal conditions, all filters converge quickly. AEKF shows a slight edge in accuracy by adaptively tuning to the noise environment.
 
@@ -74,9 +74,9 @@ In nominal conditions, all filters converge quickly. AEKF shows a slight edge in
 
 | Filter | RMSE (deg) | Diverged (%) | Avg Time (s) |
 |--------|------------|--------------|--------------|
-| **MEKF** | 0.3426 | 0.0% | 0.84s |
-| **UKF**  | 0.3426 | 0.0% | 7.06s |
-| **AEKF** | **0.3180** | 0.0% | 0.93s |
+| **MEKF** | 0.4221 | 0.0% | 0.89s |
+| **UKF**  | 0.4221 | 0.0% | 7.48s |
+| **AEKF** | **0.3841** | 0.0% | 1.00s |
 
 Both MEKF and UKF handle high bias equally well, but AEKF remains the most accurate.
 
@@ -89,11 +89,11 @@ Both MEKF and UKF handle high bias equally well, but AEKF remains the most accur
 
 | Filter | RMSE (deg) | Diverged (%) | Avg Time (s) |
 |--------|------------|--------------|--------------|
-| **MEKF** | 0.4250 | 50.0% | 0.84s |
-| **UKF**  | **0.4250** | **35.0%** | 7.04s |
-| **AEKF** | 83.3696 | 100.0% | 0.93s |
+| **MEKF** | 0.4365 | 75.0% | 0.87s |
+| **UKF**  | **0.4365** | **65.0%** | 7.33s |
+| **AEKF** | 59.1978 | 100.0% | 0.98s |
 
-**UKF** is the clear winner for robustness. It has the lowest divergence rate (35%) when starting from large $90^\circ$ errors. The **AEKF** struggled significantly in this highly non-linear initialization phase.
+**UKF** is the clear winner for robustness. It has the lowest divergence rate (65%) when starting from large $90^\circ$ errors. The **AEKF** struggled significantly in this highly non-linear initialization phase.
 
 ![High Tumble RMSE](figures/anchor_high_tumble/rmse_time.png)
 
@@ -104,9 +104,9 @@ Both MEKF and UKF handle high bias equally well, but AEKF remains the most accur
 
 | Filter | RMSE (deg) | Diverged (%) | Avg Time (s) |
 |--------|------------|--------------|--------------|
-| **MEKF** | 0.4806 | 0.0% | 0.74s |
-| **UKF**  | 0.4806 | 0.0% | 6.63s |
-| **AEKF** | **0.4388** | 0.0% | 0.83s |
+| **MEKF** | 0.3767 | 0.0% | 0.78s |
+| **UKF**  | 0.3767 | 0.0% | 6.92s |
+| **AEKF** | **0.3627** | 0.0% | 0.87s |
 
 Filters rely solely on the Magnetometer during eclipse. Accuracy degrades but remains stable.
 

@@ -1,6 +1,6 @@
 Monte Carlo Results: scen_eclipse
 Config: InitErr=10.0 deg, BiasScale=1.0x, Eclipse=True
 ========================================
-MEKF      : RMSE=0.4806 deg | Diverged=0.0% | Time=0.7433s
-UKF       : RMSE=0.4806 deg | Diverged=0.0% | Time=6.6298s
-AEKF      : RMSE=0.4388 deg | Diverged=0.0% | Time=0.8257s
+MEKF      : RMSE=0.3767 deg | Diverged=0.0% | Time=0.7759s
+UKF       : RMSE=0.3767 deg | Diverged=0.0% | Time=6.9229s
+AEKF      : RMSE=0.3627 deg | Diverged=0.0% | Time=0.8678s
